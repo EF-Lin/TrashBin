@@ -89,7 +89,6 @@ southern stations."""
         tasks = []
         for i in self.stations[self.stations.index(north):self.stations.index(south) + 1]:
             tasks.append(loop.create_task(post_ticket_data(i)))
-        print(tasks)
         loop.run_until_complete(asyncio.wait(tasks))
         return price
 
