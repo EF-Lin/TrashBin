@@ -90,11 +90,34 @@ southern stations."""
         for i in self.stations[self.stations.index(north):self.stations.index(south) + 1]:
             tasks.append(loop.create_task(post_ticket_data(i)))
         loop.run_until_complete(asyncio.wait(tasks))
-        return price
+        return price*2
+
+    def get_jump_ticket_price(self, main: str, *stop) -> int:
+        async def post_ticket_data(other):
+            nonlocal price, loop
+            money = await loop.run_in_executor(None,
+                                               lambda: self.get_one_ticket_price(main, other)) if other != main else 0
+            price += money
+
+        price = 0
+        loop = asyncio.new_event_loop()
+        tasks = []
+        for i in stop:
+            tasks.append(loop.create_task(post_ticket_data(i)))
+        loop.run_until_complete(asyncio.wait(tasks))
+        self.add_ubike(price, len(stop))
+        return price*2
+
+    @staticmethod
+    def add_ubike(price, n):
+        return price + 10*n
 
 
 if __name__ == '__main__':
     timer()
     a = PriceCalculator()
-    print(f'{a.get_region_ticket_price('4220-臺南', '4110-後壁', '4270-中洲')*2*0.9:.1f}')
+    # print(f'{a.get_region_ticket_price('4220-臺南', '4110-後壁', '4270-中洲')*0.9:.1f}')
     # >>>788.4
+    m = a.get_jump_ticket_price('4220-臺南', '4190-新市', '4170-善化', '4150-隆田', '4140-林鳳營',
+                                '4130-柳營', '4120-新營', '4110-後壁', '4260-仁德', '4270-中洲')
+    print(f'{m*0.9:.1f}')
